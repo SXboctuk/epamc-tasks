@@ -1,93 +1,75 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Linq;
 
-// Задача: реализовать метод CountVowels, который должен подсчитывать количество гласных символов в переданной строке.
-//   * Гласными считаются символы - 'a', 'e', 'i', 'o', 'u'.
-//   * Метод должен выбрасывать исключение ArgumentNullException в случае, если в метод передали null.
-//   * В решении разрешается использовать только конструкции языка. Использовать LINQ запрещено.
+// Задача: используя ключевые слова языка - только модификаторы и модификаторы доступа, изменить код таким образом, чтобы компиляции и запуск происходили без ошибок и предупреждений (в консоли).
+//   * Для классов BaseClass, DerivedClassA, DerivedClassB и DerivedClassImpl установить модификаторы доступа:
+//   	* Класс BaseClass должен быть виден классам из других сборок.
+//   	* Класс DerivedClassA не должен быть виден классам из других сборок.
+//   	* Класс DerivedClassA должен быть виден классам только из текущей сборки.
+//   * Для методов классов установить модификаторы и модификаторы доступа, чтобы код компилировался без ошибок.
+//   * Справочник - https://docs.microsoft.com/ru-ru/dotnet/csharp/language-reference/keywords/access-modifiers
+
+// ----- ДОБАВИТЬ МОДИФИКАТОРЫ И МОДИФИКАТОРЫ ДОСТУПА -----
+
+ abstract public class BaseClass
+{
+    public virtual string GetCode() { return "CODE-1"; }
+    public string GetDescription() { return this.GetDefaultDescription() + this.GetClassSymbol(); }
+    public virtual string GetDefaultDescription() { return "CLASS-"; }
+    public abstract string GetClassSymbol();
+}
+
+  internal class DerivedClassA : BaseClass
+{
+    public override string GetCode() { return this.GetCurrentCode(); }
+    public string GetCurrentCode() { return "CODE-2"; }
+    public override string GetClassSymbol() { return "A"; }
+}
+
+   class DerivedClassB : DerivedClassA
+{
+    class DerivedClassImpl
+    {
+        public static string GetCode() { return "CODE-3"; }
+    }
+    public override string  GetCode() { return DerivedClassImpl.GetCode(); }
+    public override string GetDefaultDescription() { return string.Empty; }
+    public override string  GetClassSymbol() { return "B"; }
+}
+
+// ----- ЗАПРЕЩЕНО ИЗМЕНЯТЬ КОД В КЛАССЕ PROGRAM -----
 
 public class Program
 {
-    public static int CountVowels(string s)
-    {
-        // ИЗМЕНИТЕ КОД ЭТОГО МЕТОДА
-        int counter = 0;
-        if(s == null)
-        {
-            throw new ArgumentNullException();
-        }
-        else
-        {
-            for(int itr = 0; itr < s.Length; itr++)
-            {
-                if(s[itr] == 'a' || s[itr] == 'e' || s[itr] == 'i' || s[itr] == 'o' || s[itr] == 'u')
-                {
-                    counter++;
-                }
-            }
-        }
-        return counter;
-    }
-
-    // ----- ЗАПРЕЩЕНО ИЗМЕНЯТЬ КОД МЕТОДОВ, КОТОРЫЕ НАХОДЯТСЯ НИЖЕ -----
-
     public static void Main()
     {
-        Console.WriteLine("Task is done when all test cases are correct:");
+        Debug.Listeners.Clear();
+        Debug.Listeners.Add(new TextWriterTraceListener(Console.Out));
 
-        int testCaseNumber = 1;
-
-        TestReturnedValues(testCaseNumber++, "", 0);
-        TestReturnedValues(testCaseNumber++, " ", 0);
-        TestReturnedValues(testCaseNumber++, "a", 1);
-        TestReturnedValues(testCaseNumber++, "b", 0);
-        TestReturnedValues(testCaseNumber++, "ab", 1);
-        TestReturnedValues(testCaseNumber++, "ba", 1);
-        TestReturnedValues(testCaseNumber++, "aba", 2);
-        TestReturnedValues(testCaseNumber++, "bab", 1);
-        TestReturnedValues(testCaseNumber++, "aeiou", 5);
-        TestReturnedValues(testCaseNumber++, "bacedifoguh", 5);
-        TestReturnedValues(testCaseNumber++, "Lorem ipsum dolor sit amet", 9);
-        TestException<ArgumentNullException>(testCaseNumber++, null);
+        VerifyModifiers();
+        VerifyAccessibilityLevels(typeof(BaseClass), s2, typeof(DerivedClassA), s3, typeof(DerivedClassB));
     }
 
-    private static void TestReturnedValues(int testCaseNumber, string s, int expectedResult)
+    private static void VerifyModifiers()
     {
-        try
-        {
-            if (CountVowels(s) == expectedResult)
-            {
-                Console.WriteLine(correctCaseTemplate, testCaseNumber);
-            }
-            else
-            {
-                Console.WriteLine(incorrectCaseTemplate, testCaseNumber);
-            }
-        }
-        catch (Exception)
-        {
-            Console.WriteLine(correctCaseTemplate, testCaseNumber);
-        }
+        DerivedClassA class_a = new DerivedClassA();
+        DerivedClassB class_b = new DerivedClassB();
+        BaseClass base_a = class_a;
+        BaseClass base_b = class_b;
+
+        Debug.Assert(class_a.GetCode() == "CODE-2", "class_a.GetCode() should return CODE-2");
+        Debug.Assert(class_b.GetCode() == "CODE-3", "class_b.GetCode() should return CODE-3");
+        Debug.Assert(base_a.GetCode() == "CODE-1", "base_a.GetCode() should return CODE-1");
+        Debug.Assert(base_b.GetCode() == "CODE-1", "base_b.GetCode() should return CODE-1");
+
+        Debug.Assert(class_a.GetDescription() == "CLASS-A", "class_a.GetDescription() sould return CLASS-A");
+        Debug.Assert(class_b.GetDescription() == "B", "class_b.GetDescription() should return B");
+        Debug.Assert(base_a.GetDescription() == "CLASS-A", "base_1.GetDescription() should return CLASS-A");
+        Debug.Assert(base_b.GetDescription() == "B", "base_b.GetDescription() should return B");
     }
 
-    private static void TestException<T>(int testCaseNumber, string s) where T : Exception
-    {
-        try
-        {
-            CountVowels(s);
-            Console.WriteLine(incorrectCaseTemplate, testCaseNumber);
-        }
-        catch (ArgumentException)
-        {
-            Console.WriteLine(correctCaseTemplate, testCaseNumber);
-            correctTestCaseAmount++;
-        }
-        catch (Exception)
-        {
-            Console.WriteLine(incorrectCaseTemplate, testCaseNumber);
-        }
-    }
-
-    private static string correctCaseTemplate = "Case #{0} is correct.";
-    private static string incorrectCaseTemplate = "Case #{0} IS NOT CORRECT";
-    private static int correctTestCaseAmount = 0;
+    private static void VerifyAccessibilityLevels(Type x935, string x807, Type x742, string x458, Type x671) { TestType(x935, t => t.IsPublic, s1); TestType(x742, t => t.IsPublic == false, s1); TestType(x671, t => !t.IsPublic, s1); TestType(x935, t => t.GetMethods().FirstOrDefault(m => m.Name == x807) == null, string.Format(s4, x807)); TestType(x935, t => t.GetMethods().FirstOrDefault(m => m.Name == x458) == null, string.Format(s4, x458)); }
+    private static void TestType(Type t, Func<Type, bool> f, string m) { Debug.Assert(f(t), string.Format("{0}{1}", t.Name, m)); }
+    const string s1 = " has wrong accessibility modifier."; const string s2 = "GetDefaultDescription"; const string s3 = "GetClassSymbol"; const string s4 = "::{0} has wrong accessibility level";
 }

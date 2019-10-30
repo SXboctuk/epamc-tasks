@@ -1,31 +1,36 @@
 ﻿using System;
+using System.Linq;
 
-// Задача: реализовать метод CountVowels, который должен подсчитывать количество гласных символов в переданной строке.
-//   * Гласными считаются символы - 'a', 'e', 'i', 'o', 'u'.
-//   * Метод должен выбрасывать исключение ArgumentNullException в случае, если в метод передали null.
-//   * В решении разрешается использовать только конструкции языка. Использовать LINQ запрещено.
+// Задача: реализовать метод SortStringArray, который должен возвращать сортированный массив строк.
+//   * Массив должен сортировать строки по количеству символов.
+//   * Метод должен выбрасывать ArgumentNullException, если в метод передан null.
+//   * В решении разрешается использовать только конструкции языка. Использовать LINQ запрещено. Рекомендуется не использовать любые дополнительные структуры данных.
 
 public class Program
 {
-    public static int CountVowels(string s)
+    public static string[] SortStringArray(string[] array)
     {
-        // ИЗМЕНИТЕ КОД ЭТОГО МЕТОДА
-        int counter = 0;
-        if(s == null)
+        // ИЗМЕНИТЕ КОД ЭТОГО МЕТОДА.
+        if (array == null)
         {
             throw new ArgumentNullException();
         }
         else
         {
-            for(int itr = 0; itr < s.Length; itr++)
+            int item; // индекс предыдущего элемента
+            for (int counter = 1; counter < array.Length; counter++)
             {
-                if(s[itr] == 'a' || s[itr] == 'e' || s[itr] == 'i' || s[itr] == 'o' || s[itr] == 'u')
+                string temp = array[counter]; // инициализируем временную переменную текущим значением элемента массива
+                item = counter - 1; // запоминаем индекс предыдущего элемента массива
+                while (item >= 0 && array[item].Length > temp.Length) // пока индекс не равен 0 и предыдущий элемент массива больше текущего
                 {
-                    counter++;
+                    array[item + 1] = array[item]; // перестановка элементов массива
+                    array[item] = temp;
+                    item--;
                 }
             }
         }
-        return counter;
+        return array;
     }
 
     // ----- ЗАПРЕЩЕНО ИЗМЕНЯТЬ КОД МЕТОДОВ, КОТОРЫЕ НАХОДЯТСЯ НИЖЕ -----
@@ -36,27 +41,38 @@ public class Program
 
         int testCaseNumber = 1;
 
-        TestReturnedValues(testCaseNumber++, "", 0);
-        TestReturnedValues(testCaseNumber++, " ", 0);
-        TestReturnedValues(testCaseNumber++, "a", 1);
-        TestReturnedValues(testCaseNumber++, "b", 0);
-        TestReturnedValues(testCaseNumber++, "ab", 1);
-        TestReturnedValues(testCaseNumber++, "ba", 1);
-        TestReturnedValues(testCaseNumber++, "aba", 2);
-        TestReturnedValues(testCaseNumber++, "bab", 1);
-        TestReturnedValues(testCaseNumber++, "aeiou", 5);
-        TestReturnedValues(testCaseNumber++, "bacedifoguh", 5);
-        TestReturnedValues(testCaseNumber++, "Lorem ipsum dolor sit amet", 9);
+        TestReturnedValues(testCaseNumber++, new string[] { }, new string[] { });
+        TestReturnedValues(testCaseNumber++, new string[] { string.Empty }, new string[] { string.Empty });
+        TestReturnedValues(testCaseNumber++, new string[] { "abc" }, new string[] { "abc" });
+        TestReturnedValues(testCaseNumber++, new string[] { "abc", "abcd" }, new string[] { "abc", "abcd" });
+        TestReturnedValues(testCaseNumber++, new string[] { "abcd", "abc" }, new string[] { "abc", "abcd" });
+        TestReturnedValues(testCaseNumber++, new string[] { "abc", "abcd", "abcde" }, new string[] { "abc", "abcd", "abcde" });
+        TestReturnedValues(testCaseNumber++, new string[] { "abcde", "abcd", "abc" }, new string[] { "abc", "abcd", "abcde" });
+        TestReturnedValues(testCaseNumber++, new string[] { "123456", "1", "12345", "12", "1234", "123", "1234567" }, new string[] { "1", "12", "123", "1234", "12345", "123456", "1234567" });
+        TestReturnedValues(testCaseNumber++, new string[] { "1234567", "123", "1", "12345678", "12", "1234", "12", "1234", "123", "123456", "12345678", "1234", "12345", "123556" }, new string[] { "1", "12", "12", "123", "123", "1234", "1234", "1234", "12345", "123456", "123556", "1234567", "12345678", "12345678" });
+
         TestException<ArgumentNullException>(testCaseNumber++, null);
+
+        if (correctTestCaseAmount == testCaseNumber - 1)
+        {
+            Console.WriteLine("Task is done.");
+        }
+        else
+        {
+            Console.WriteLine("TASK IS NOT DONE.");
+        }
     }
 
-    private static void TestReturnedValues(int testCaseNumber, string s, int expectedResult)
+    private static void TestReturnedValues(int testCaseNumber, string[] array, string[] expectedResult)
     {
         try
         {
-            if (CountVowels(s) == expectedResult)
+            var result = SortStringArray(array);
+
+            if (result.SequenceEqual(expectedResult))
             {
                 Console.WriteLine(correctCaseTemplate, testCaseNumber);
+                correctTestCaseAmount++;
             }
             else
             {
@@ -69,14 +85,14 @@ public class Program
         }
     }
 
-    private static void TestException<T>(int testCaseNumber, string s) where T : Exception
+    private static void TestException<T>(int testCaseNumber, string[] array) where T : Exception
     {
         try
         {
-            CountVowels(s);
+            SortStringArray(array);
             Console.WriteLine(incorrectCaseTemplate, testCaseNumber);
         }
-        catch (ArgumentException)
+        catch (T)
         {
             Console.WriteLine(correctCaseTemplate, testCaseNumber);
             correctTestCaseAmount++;

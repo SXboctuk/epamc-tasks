@@ -1,32 +1,63 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
-// Задача: реализовать метод CountVowels, который должен подсчитывать количество гласных символов в переданной строке.
-//   * Гласными считаются символы - 'a', 'e', 'i', 'o', 'u'.
-//   * Метод должен выбрасывать исключение ArgumentNullException в случае, если в метод передали null.
-//   * В решении разрешается использовать только конструкции языка. Использовать LINQ запрещено.
+// Задача: реализовать метод GetPrimeNumbers, который должен возвращать массив простых чисел, находящихся в исследуемой последовательности чисел.
+//   * Массив должен содержать значения в возрастающем порядке.
+//   * Параметры start и end задают граничные значения исследуемой последовательности чисел (включительно).
+//   * Выбрасывать исключение ArgumentException в случае, если значения параметров не являются корректными.
+//   * В решении разрешается использовать только конструкции языка и стандартные структуры данных BCL. Использовать LINQ запрещено.
 
 public class Program
 {
-    public static int CountVowels(string s)
+    public static int[] GetPrimeNumbers(int start, int end)
     {
-        // ИЗМЕНИТЕ КОД ЭТОГО МЕТОДА
-        int counter = 0;
-        if(s == null)
+        // ИЗМЕНИТЕ КОД ЭТОГО МЕТОДА.
+        
+        if(start == null || end == null || start < 2 || end < 2 || start > end)
         {
-            throw new ArgumentNullException();
+            throw new ArgumentException();
         }
         else
         {
-            for(int itr = 0; itr < s.Length; itr++)
+
+            List<int> numbers = new List<int>();
+
+            bool flag;
+            for(int i = 2; i <= end; i++ )
             {
-                if(s[itr] == 'a' || s[itr] == 'e' || s[itr] == 'i' || s[itr] == 'o' || s[itr] == 'u')
+                flag = true;
+                foreach(int n in numbers)
                 {
-                    counter++;
+                    if( i % n == 0)
+                    {
+                        flag = false;
+                        break;
+                    }
+                }
+                if(flag == true)
+                {
+                    numbers.Add(i);
                 }
             }
+            for (int i = 0; i < numbers.Count; i++)
+            {
+                if (numbers[i] > end || numbers[i] < start)
+                {
+                    numbers.RemoveAt(i);
+                    i--;
+                }
+            }
+            //foreach(var test in numbers)
+            //{
+            //    Console.WriteLine($"{test} ");
+            //}
+            return numbers.ToArray();
         }
-        return counter;
+        
     }
+
+    // ДОБАВЬТЕ НОВЫЕ МЕТОДЫ, ЕСЛИ НЕОБХОДИМО
 
     // ----- ЗАПРЕЩЕНО ИЗМЕНЯТЬ КОД МЕТОДОВ, КОТОРЫЕ НАХОДЯТСЯ НИЖЕ -----
 
@@ -36,54 +67,69 @@ public class Program
 
         int testCaseNumber = 1;
 
-        TestReturnedValues(testCaseNumber++, "", 0);
-        TestReturnedValues(testCaseNumber++, " ", 0);
-        TestReturnedValues(testCaseNumber++, "a", 1);
-        TestReturnedValues(testCaseNumber++, "b", 0);
-        TestReturnedValues(testCaseNumber++, "ab", 1);
-        TestReturnedValues(testCaseNumber++, "ba", 1);
-        TestReturnedValues(testCaseNumber++, "aba", 2);
-        TestReturnedValues(testCaseNumber++, "bab", 1);
-        TestReturnedValues(testCaseNumber++, "aeiou", 5);
-        TestReturnedValues(testCaseNumber++, "bacedifoguh", 5);
-        TestReturnedValues(testCaseNumber++, "Lorem ipsum dolor sit amet", 9);
-        TestException<ArgumentNullException>(testCaseNumber++, null);
+        TestReturnValues(testCaseNumber++, 2, 2, new int[] { 2 });
+        TestReturnValues(testCaseNumber++, 2, 3, new int[] { 2, 3 });
+        TestReturnValues(testCaseNumber++, 2, 10, new int[] { 2, 3, 5, 7 });
+        TestReturnValues(testCaseNumber++, 30, 48, new int[] { 31, 37, 41, 43, 47 });
+        TestReturnValues(testCaseNumber++, 11, 97, new int[] { 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97 });
+        TestReturnValues(testCaseNumber++, 180, 190, new int[] { 181 });
+        TestException<ArgumentException>(testCaseNumber++, -1, -1);
+        TestException<ArgumentException>(testCaseNumber++, -1, 100);
+        TestException<ArgumentException>(testCaseNumber++, 0, 0);
+        TestException<ArgumentException>(testCaseNumber++, 0, 100);
+        TestException<ArgumentException>(testCaseNumber++, 1, 1);
+        TestException<ArgumentException>(testCaseNumber++, 1, 100);
+        TestException<ArgumentException>(testCaseNumber++, 2, -1);
+        TestException<ArgumentException>(testCaseNumber++, 2, 0);
+        TestException<ArgumentException>(testCaseNumber++, 2, 1);
+
+        if (correctTestCaseAmount == testCaseNumber - 1)
+        {
+            Console.WriteLine("Task is done.");
+        }
+        else
+        {
+            Console.WriteLine("TASK IS NOT DONE.");
+        }
     }
 
-    private static void TestReturnedValues(int testCaseNumber, string s, int expectedResult)
+    private static void TestReturnValues(int testCaseNumber, int start, int end, int[] expectedResult)
     {
+        int[] primeNumbers;
         try
         {
-            if (CountVowels(s) == expectedResult)
+            primeNumbers = GetPrimeNumbers(start, end);
+            if (primeNumbers.SequenceEqual(expectedResult))
             {
                 Console.WriteLine(correctCaseTemplate, testCaseNumber);
+                correctTestCaseAmount++;
             }
             else
             {
                 Console.WriteLine(incorrectCaseTemplate, testCaseNumber);
             }
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            Console.WriteLine(correctCaseTemplate, testCaseNumber);
+            Console.WriteLine(incorrectCaseTemplate, testCaseNumber);
         }
     }
 
-    private static void TestException<T>(int testCaseNumber, string s) where T : Exception
+    private static void TestException<T>(int testCaseNumber, int startValue, int endValue) where T : Exception
     {
         try
         {
-            CountVowels(s);
+            GetPrimeNumbers(startValue, endValue);
             Console.WriteLine(incorrectCaseTemplate, testCaseNumber);
         }
-        catch (ArgumentException)
+        catch (T)
         {
             Console.WriteLine(correctCaseTemplate, testCaseNumber);
             correctTestCaseAmount++;
         }
         catch (Exception)
         {
-            Console.WriteLine(incorrectCaseTemplate, testCaseNumber);
+            Console.WriteLine("#{0} - case is not correct!", testCaseNumber);
         }
     }
 
